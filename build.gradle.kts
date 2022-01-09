@@ -50,4 +50,5 @@ tasks.register<Copy>("copyProductionFile") {
     dependsOn("browserProductionWebpack")
     from("$buildDir/distributions/index.html")
     into("$projectDir")
+    filter { line -> line.replace("module.exports.salary=r", "") }
 }
