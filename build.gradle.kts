@@ -48,6 +48,6 @@ rootProject.plugins.withType<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJ
 
 tasks.register<Copy>("copyProductionFile") {
     dependsOn("browserProductionWebpack")
-    from("$buildDir/distributions/poland-taxes-calculator.html")
-    into("$projectDir/host")
+    from("$buildDir/distributions/index.html")
+    into("$projectDir")
 }

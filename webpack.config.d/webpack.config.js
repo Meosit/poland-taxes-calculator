@@ -10,7 +10,7 @@
        inject: 'body',
        cache: false,
        entry: "salary.js",
-       filename: 'poland-taxes-calculator.html',
+       filename: 'index.html',
        minify: false
     }))
     config.plugins.push(new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/\.(js|css)$/]),)
