@@ -72,4 +72,7 @@ data class Input(
     // only to convert your nett to USD, nothing else
     val usdRate: BigDecimal = "4.0507".bdc,
     val sickLeaves: List<Pair<LocalDate, LocalDate>> = listOf(),
+
+    val creativeWorkStart: Month = Month("2022-01"),
+    val creativeWorkPercent: BigDecimal = zero,
 )

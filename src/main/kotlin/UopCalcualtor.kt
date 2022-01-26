@@ -72,6 +72,12 @@ class UopCalcualtor(input: Input) {
     // list of sick leave ranges which will be paid as 80% of contract salary
     private val sickLeaves: List<Pair<LocalDate, LocalDate>> = input.sickLeaves
 
+    // Start date of creative work become applicable
+    private val creativeWorkStart: Month = input.creativeWorkStart
+
+    // Percent of PIT base reduce for authors of copyrighted works
+    private val creativeWorkPercent: BigDecimal = input.creativeWorkPercent
+
     // FIXED VALUES
     // FIXED VALUES
     // FIXED VALUES
@@ -83,8 +89,6 @@ class UopCalcualtor(input: Input) {
     )
     private val normalIncomeTaxCap = "85528".bdc
     private val normalIncomeTaxCapSince2022 = "120000".bdc
-    private val teenTaxCap = "85528".bdc
-    private val teenTaxCapSince2022 = "120000".bdc
 
     private val retirementInsuranceTaxRate = "0.0976".bdc
     private val disabilityInsuranceTaxRate = "0.015".bdc
@@ -114,6 +118,12 @@ class UopCalcualtor(input: Input) {
         var pitBaseForTeens: BigDecimal = zero,
         var normalPit: BigDecimal = zero,
         var increasedPit: BigDecimal = zero,
+        var creativeWorkTaxFree: BigDecimal = zero,
+    )
+
+    private data class SicknessCompensationState(
+        var monthGrosses: List<BigDecimal> = emptyList(),
+        var currentTotalWorkDays: BigDecimal = zero
     )
 
 
@@ -127,6 +137,7 @@ class UopCalcualtor(input: Input) {
             )}.flatten()
 
         var yearlyState = YearlyState(months[0].year)
+        val sicknessCompensationState = SicknessCompensationState()
         val years = mutableMapOf(yearlyState.year to yearlyState)
         val taxMonths = months.mapIndexed { i, month ->
             if (month.name == "January" && i != 0) {
@@ -137,16 +148,13 @@ class UopCalcualtor(input: Input) {
             val useNewRules = month.cal.year().toInt() >= 2022 && useNewRulesAfter2022
             val actualNormalIncomeTaxCap: BigDecimal
             val actualNormalTaxFreeQuota: BigDecimal
-            val actualTeenTaxCap: BigDecimal
             if (useNewRules) {
                 month.log("Using a new 2022 rules for tax calculation, PIT of ${normalIncomeTaxRate.percentString()} is till ${normalIncomeTaxCapSince2022.str()} ")
                 actualNormalIncomeTaxCap = normalIncomeTaxCapSince2022
                 actualNormalTaxFreeQuota = normalTaxFreeQuotaSince2022
-                actualTeenTaxCap = teenTaxCapSince2022
             } else {
                 actualNormalIncomeTaxCap = normalIncomeTaxCap
                 actualNormalTaxFreeQuota = normalTaxFreeQuota
-                actualTeenTaxCap = teenTaxCap
             }
             val workingDays: BigDecimal = if (i == 0) month.workDaysAfter(startDate).bdc else month.workDaysCount.bdc
             month.log("In this month there are ${workingDays.str()} working days")
@@ -158,15 +166,19 @@ class UopCalcualtor(input: Input) {
             var bonuses = zero
             yearlyState.contractGrossIncome += gross
 
-            val (sickDeduction, sickDays) = sickLeavesDeduction(month, gross)
-            gross -= sickDeduction
-            month.logNonZero(sickDays, "Deducting gross income with due to sickness by $sickDeduction, the actual gross now is $gross")
+            val (sickSalary, sickDays) = sickLeavesGross(month, sicknessCompensationState)
+            val grossSalaryWithinSickness = (gross div workingDays) * sickDays
+            gross -= grossSalaryWithinSickness
+            gross += sickSalary
+            month.logNonZero(sickDays, "Deducting gross income with due to sickness by ${grossSalaryWithinSickness.str()}, but also adding a sickness compensation of ${sickSalary.str()}, the actual gross now is ${gross.str()}")
             yearlyState.sickDays += sickDays
 
             val targetBonus = targetBonus(month, changedContractGross)
             gross += targetBonus
             bonuses += targetBonus
             yearlyState.targetBonuses += targetBonus
+            sicknessCompensationState.monthGrosses = (sicknessCompensationState.monthGrosses + gross).takeLast(12)
+            sicknessCompensationState.currentTotalWorkDays += workingDays
 
             occasionalBonusesGross[month]?.let {
                 gross += it
@@ -229,22 +241,25 @@ class UopCalcualtor(input: Input) {
             val baseIncome = gross - socialSecurityTax
             month.log("Base Income for PIT calculation is: ${gross.str()} - ${socialSecurityTax.str()} = ${baseIncome.str()}")
 
-            val pitBase = positive(baseIncome - fixedLocalityTaxBaseFreeQuota).sc()
+            val creativeWorkTaxFree = creativeWorkTaxFree(month, baseIncome, actualNormalIncomeTaxCap, yearlyState)
+            val pitBase = positive(baseIncome - creativeWorkTaxFree - fixedLocalityTaxBaseFreeQuota).sc()
+            yearlyState.creativeWorkTaxFree += creativeWorkTaxFree
             yearlyState.pitBase += pitBase
-            month.log("For PIT, there is a fixed locality tax free amount of ${fixedLocalityTaxBaseFreeQuota.str()} (since you're living ${if (liveOutsideOfCity) "NOT " else ""}in the city where you're working). So, the base for the PIT is: ${baseIncome.str()} - ${fixedLocalityTaxBaseFreeQuota.str()} = ${pitBase.str()}")
+            month.log("For PIT, there is a fixed locality tax free amount of ${fixedLocalityTaxBaseFreeQuota.str()} (since you're living ${if (liveOutsideOfCity) "NOT " else ""}in the city where you're working).")
+            month.log("So, the base for the PIT is: ${baseIncome.str()} - ${creativeWorkTaxFree.str()} - ${fixedLocalityTaxBaseFreeQuota.str()} = ${pitBase.str()}")
 
             val zeroTaxApplies = isTeenZeroTaxApply(month)
 
-            val pitBaseForTeens = min(positive(yearlyState.pitBase - actualTeenTaxCap), pitBase)
+            val pitBaseForTeens = min(positive(yearlyState.pitBase - actualNormalIncomeTaxCap), pitBase)
             yearlyState.pitBaseForTeens += pitBaseForTeens
 
             val actualYearlyPitBase = if(zeroTaxApplies) yearlyState.pitBaseForTeens else yearlyState.pitBase
             val actualPitBase = when {
                 zeroTaxApplies && yearlyState.pitBaseForTeens <= actualNormalIncomeTaxCap + pitBase -> {
                     if (yearlyState.pitBaseForTeens != zero) {
-                        month.log("As a person under 26 years, you have reached your PIT-free cap of ${actualTeenTaxCap.str()} (currently ${yearlyState.pitBase.str()}), in this month you will pax income tax based on ${yearlyState.pitBaseForTeens.str()}, after that a normal rules apply")
+                        month.log("As a person under 26 years, you have reached your PIT-free cap of ${actualNormalIncomeTaxCap.str()} (currently ${yearlyState.pitBase.str()}), in this month you will pax income tax based on ${yearlyState.pitBaseForTeens.str()}, after that a normal rules apply")
                     } else {
-                        month.log("You're younger than 26 and PIT-free cap of ${actualTeenTaxCap.str()} is not reached (now is ${yearlyState.pitBase.str()}), so no PIT at all!")
+                        month.log("You're younger than 26 and PIT-free cap of ${actualNormalIncomeTaxCap.str()} is not reached (now is ${yearlyState.pitBase.str()}), so no PIT at all!")
                     }
                     pitBaseForTeens
                 }
@@ -331,6 +346,25 @@ class UopCalcualtor(input: Input) {
         return taxMonths
     }
 
+    private fun creativeWorkTaxFree(
+        month: Month,
+        baseIncome: BigDecimal,
+        actualNormalIncomeTaxCap: BigDecimal,
+        yearlyState: YearlyState
+    ) = if (month >= creativeWorkStart) {
+        val creativeWorkTaxFree = min(
+            baseIncome * creativeWorkPercent div 100.bdc,
+            positive(actualNormalIncomeTaxCap - yearlyState.creativeWorkTaxFree)
+        )
+        month.logNonZero(
+            creativeWorkPercent,
+            "You have a PIT base reduce due to creative work quota by $creativeWorkPercent%: ${baseIncome.str()} * ${creativeWorkPercent.str()} / 100 = ${creativeWorkTaxFree.str()} (with maximum of ${actualNormalIncomeTaxCap.str()}, currently is ${yearlyState.creativeWorkTaxFree.str()})"
+        )
+        if (creativeWorkPercent != zero && creativeWorkTaxFree == zero)
+            month.log("You have reached a maximum ($actualNormalIncomeTaxCap) of a PIT base reduce due to creative work - so no benefits")
+        creativeWorkTaxFree
+    } else zero
+
     private fun monthlyTaxFreeQuota(normalTaxFreeQuota: BigDecimal, normalIncomeTaxCap: BigDecimal, yearlyPitBase: BigDecimal, monthPitBase: BigDecimal) = when {
         sharedTaxDeclaration -> normalTaxFreeQuota
         yearlyPitBase in zero..normalIncomeTaxCap.minusPenny() -> normalTaxFreeQuota
@@ -338,14 +372,20 @@ class UopCalcualtor(input: Input) {
         else -> zero
     } div "12".bdc
 
-    private fun sickLeavesDeduction(month: Month, contractGrossIncome: BigDecimal): Pair<BigDecimal, BigDecimal> {
+    private fun sickLeavesGross(month: Month, sicknessCompensationState: SicknessCompensationState): Pair<BigDecimal, BigDecimal> {
         val sickDays = month.workDays.count { day -> sickLeaves.any { (start, end) -> (day.isAfter(start) && day.isBefore(end)) || day.isEqual(start) || day.isEqual(end) } }.bdc
-        month.logNonZero(sickDays,"In this month you had $sickDays sick days which are paid as 80% of your contract gross daily salary, basically we need to divide 20% from salary")
-        val dailyGrossSalary = contractGrossIncome div month.workDaysCount.bdc
-        val grossSalaryWithinSickLeave = dailyGrossSalary * sickDays
-        val sickLeavesDeduction = grossSalaryWithinSickLeave * "0.2".bdc
-        month.logNonZero(sickDays, "So, gross salary deduction is: Daily Gross Salary * Sick Days * 20% = ${dailyGrossSalary.sc()} * $sickDays * 20% = ${sickLeavesDeduction.sc()}")
-        return sickLeavesDeduction.sc() to sickDays
+        if (sickDays != zero && sicknessCompensationState.currentTotalWorkDays == zero) {
+            month.log("You had $sickDays but you haven't yet paid for your ensurance for 30 days, so you are not eligible for sick pay")
+            return zero to sickDays
+        }
+        if (sickDays == zero) {
+            return zero to zero
+        }
+        val dailyGrossSalary = sicknessCompensationState.monthGrosses.takeLast(12).sum() div sicknessCompensationState.currentTotalWorkDays
+        month.logNonZero(sickDays,"In this month you had $sickDays sick days which are paid as 80% of your contract gross daily salary for last 12 months = ${dailyGrossSalary.str()}")
+        val grossSalaryWithinSickLeave = dailyGrossSalary * sickDays * "0.8".bdc
+        month.logNonZero(sickDays, "So, gross salary within sick leave is: Daily Gross Salary * Sick Days * 80% = ${dailyGrossSalary.sc().str()} * $sickDays * 80% = ${grossSalaryWithinSickLeave.sc().str()}")
+        return grossSalaryWithinSickLeave.sc() to sickDays
     }
 
     private fun grossWithFirstMonthRespect(

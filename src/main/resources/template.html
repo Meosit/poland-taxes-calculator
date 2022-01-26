@@ -35,6 +35,7 @@
         <div class="card-content is-hidden has-background-danger-light has-text-danger-dark">
             <div class="content">
                 <p><strong>This site can be used offline - everything is packed inside this HTML file, so you just need to download it and open in browser (preferably Chrome)</strong></p>
+                <p><strong>Link to the source code: <a target=”_blank” href="https://github.com/Meosit/poland-taxes-calculator">https://github.com/Meosit/poland-taxes-calculator</a></strong></p>
                 <p>
                     This calculator is for informational purposes only, it can and will contain errors depending on real cases which cannot be predicted. Yearly tax declaration is not supported, this is just month-by-month taxes and their month-by-month fluctuations according to the sources i found in web and my personal understanding. The idea of this calculator is to <strong>UNDERSTAND</strong> what is actually written in your payslip.
                     In best case scenario you should have a fully retrospective setup and the data should match with our payslip with a little error of up to 0.05 zł.
@@ -49,6 +50,7 @@
                     <li>Occasional Bonuses (Compensations) and Deductions (customizable)</li>
                     <li>Young people tax reduce (under 26 years old)</li>
                     <li>Official Sick Leaves</li>
+                    <li>Creative Work Tax Reduce</li>
                     <li>"Polski Ład" changes starting from 2022</li>
                     <li>Shared with wife/husband yearly tax declaration (but note that this is related only to month-by-month taxes, not the actual tax declaration)</li>
                 </ul>
@@ -137,6 +139,22 @@
                                         <input class="input is-small" required type="date" id="adultDate" name="adultDate" value="2000-01-01" >
                                     </div>
                                 </div>
+                                <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Special tax-deductible rates for authors of copyrighted works. If they receive a remuneration for the transfer of the copyright, they may apply tax-deductible costs in the amount of 50% of a portion of earned income. Basically it reduces the yearly and monthly bases for PIT starting from specified month">
+                                    <label class="label" for="creativeWorkPercent">Creative Work:</label>
+                                    <div class="columns is-gapless is-multiline has-tooltip-multiline has-tooltip-bottom">
+                                        <div class="column is-three-fifths field">
+                                            <div class="control is-small">
+                                                <input class="input is-small" required type="month" min="0" value="2022-01" checked="" id="creativeWorkStart" name="creativeWorkStart">
+                                            </div>
+                                        </div>
+                                        <div class="column is-two-fifths field">
+                                            <div class="control is-small has-icons-right">
+                                                <input class="input is-small" required type="number" min="0" step="any" value="0" id="creativeWorkPercent" name="creativeWorkPercent">
+                                                <span class="icon is-small is-right"><i class="fas fa-percent"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Whether to use the new changes in tax law. The most important are 2 changes: increased normal tax cap (from 85k to 120k), increased a tax-free sum (from 525.12 to 5100) and health tax cannot be reduced by the PIT (7.75% of health tax cannot be deducted from PIT)">
                                     <label class="label" for="useNewRulesAfter2022">
                                         <input type="checkbox" class="checkbox" checked id="useNewRulesAfter2022" name="useNewRulesAfter2022">
@@ -161,7 +179,7 @@
                                         Live outside of city
                                     </label>
                                 </div>
-                                <div class="has-tooltip-multiline has-tooltip-bottom"  data-tooltip="A list of official sick leaves, which are paid as 80% of your gross contract daily salary">
+                                <div class="has-tooltip-multiline has-tooltip-bottom"  data-tooltip="A list of official sick leaves, which are paid as 80% of your gross contract daily salary for last year">
                                     <label class="label">Sick leaves:</label>
                                     <div class="columns is-gapless is-multiline has-tooltip-multiline has-tooltip-bottom">
                                         <div class="column is-half field">
@@ -249,7 +267,7 @@
                         </header>
                         <div class="card-content">
                             <div class="content">
-                                <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Global switch, if set, it will calculate a target annual and quarter bonuses">
+                                <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Global switch, if set, it will calculate a target annual and quarter bonuses for February, April, July, October">
                                     <label class="label" for="withTargetBonus">
                                         <input type="checkbox" class="checkbox" checked id="withTargetBonus" name="withTargetBonus">
                                         Calculate annual and quarter bonuses

@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-js")
-    implementation("com.ionspin.kotlin:bignum:0.3.3")
+    implementation("com.ionspin.kotlin:bignum:0.3.4")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
     implementation(npm("html-webpack-plugin", "5.0.0-beta.5"))
     implementation(npm("react-dev-utils", "12.0.0"))

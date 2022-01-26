@@ -5,7 +5,10 @@ import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.datetime.internal.JSJoda.LocalDate
-import org.w3c.dom.*
+import org.w3c.dom.HTMLElement
+import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.asList
+import org.w3c.dom.get
 
 
 val defaultDecimalMode = DecimalMode(decimalPrecision = 10, roundingMode = RoundingMode.ROUND_HALF_TO_EVEN)
@@ -23,6 +26,7 @@ fun BigDecimal.str(deduction: Boolean = true): String {
 fun BigDecimal.sc(decimalDigits: Int = 2): BigDecimal = this.roundToDigitPositionAfterDecimalPoint(decimalDigits.toLong(), RoundingMode.ROUND_HALF_TO_EVEN)
 fun BigDecimal.percentString() = (this * 100.bdc).roundToDigitPositionAfterDecimalPoint(2, RoundingMode.ROUND_HALF_TO_EVEN).toPlainString() + "%"
 fun BigDecimal.minusPenny(): BigDecimal = this - "0.01".bdc.sc()
+fun Iterable<BigDecimal>.sum() = reduceOrNull(BigDecimal::add) ?: zero
 fun <T> Iterable<T>.sumOf(selector: (T) -> BigDecimal) = map(selector).reduceOrNull(BigDecimal::add) ?: zero
 fun <T> Iterable<T>.avgOf(selector: (T) -> BigDecimal) = (sumOf(selector) div this.count().bdc).sc(2)
 
@@ -85,43 +89,27 @@ fun main() {
     })
 
     addBackupClickListener()
-    submitTheCalculation()
+
+    val backupString: String? = document.location?.search
+        ?.ifBlank { null }
+        ?.substring(1)
+        ?.split("&")
+        ?.map { it.split("=") }
+        ?.firstOrNull {
+            it.size == 2 && it[0] == "backup"
+        }?.get(1)
+    if (backupString == null) {
+        submitTheCalculation()
+    } else {
+        (document.getElementById("backup") as HTMLInputElement).value = backupString
+        loadAndRunBackup()
+    }
 }
 
 private fun addBackupClickListener() {
     document.getElementById("backup-form")?.addEventListener("submit", { event ->
         event.preventDefault()
-        try {
-            val backupBase64 = (document.getElementById("backup") as HTMLInputElement).value
-            val backup = window.atob(backupBase64)
-            val fields = backup.split("|")
-
-            (document.getElementById("salaryMonthlyGross") as HTMLInputElement).value = fields[0]
-            (document.getElementById("startDate") as HTMLInputElement).value = fields[1]
-            (document.getElementById("adultDate") as HTMLInputElement).value = fields[2]
-            (document.getElementById("sharedTaxDeclaration") as HTMLInputElement).checked = fields[3].toBooleanStrict()
-            (document.getElementById("foodVouchersFullyCompensated") as HTMLInputElement).checked = fields[4].toBooleanStrict()
-            (document.getElementById("dailyFoodVouchersIncome") as HTMLInputElement).value = fields[5]
-            (document.getElementById("permanentMonthlyNettDeductions") as HTMLInputElement).value = fields[6]
-            (document.getElementById("participateInPPK") as HTMLInputElement).checked = fields[7].toBooleanStrict()
-            (document.getElementById("liveOutsideOfCity") as HTMLInputElement).checked = fields[8].toBooleanStrict()
-            (document.getElementById("withTargetBonus") as HTMLInputElement).checked = fields[9].toBooleanStrict()
-            (document.getElementById("annualTargetBonusRatio") as HTMLInputElement).value = fields[10]
-            (document.getElementById("quarterTargetBonusRatio") as HTMLInputElement).value = fields[11]
-            (document.getElementById("useNewRulesAfter2022") as HTMLInputElement).checked = fields[12].toBooleanStrict()
-            (document.getElementById("usdRate") as HTMLInputElement).value = fields[13]
-            setFromMap("salaryChange", fields[14])
-            setFromMap("actualAnnualBonus", fields[15])
-            setFromMap("actualQuarterBonus", fields[16])
-            setFromMap("occasionalBonusesGross", fields[17])
-            setFromMap("occasionalNettDeductions", fields[18])
-            setFromMap("actualFoodVouchers", fields[19])
-            setFromMap("sickLeaves", fields[20])
-            submitTheCalculation()
-        } catch (e: Exception) {
-            val element = document.getElementById("output")
-            element?.innerHTML = "Backup failure: ${e.message}"
-        }
+        loadAndRunBackup()
     })
     val backupCopy = document.getElementById("backup-copy")
     if (backupCopy != null) {
@@ -136,6 +124,43 @@ private fun addBackupClickListener() {
         backupCopy.addEventListener("mouseout", {
             backupCopy.innerHTML = "<i class=\"fas fa-copy\"></i>"
         })
+    }
+}
+
+private fun loadAndRunBackup() {
+    try {
+        val backupBase64 = (document.getElementById("backup") as HTMLInputElement).value
+        val backup = window.atob(backupBase64)
+        val fields = backup.split("|")
+
+        (document.getElementById("salaryMonthlyGross") as HTMLInputElement).value = fields[0]
+        (document.getElementById("startDate") as HTMLInputElement).value = fields[1]
+        (document.getElementById("adultDate") as HTMLInputElement).value = fields[2]
+        (document.getElementById("sharedTaxDeclaration") as HTMLInputElement).checked = fields[3].toBooleanStrict()
+        (document.getElementById("foodVouchersFullyCompensated") as HTMLInputElement).checked =
+            fields[4].toBooleanStrict()
+        (document.getElementById("dailyFoodVouchersIncome") as HTMLInputElement).value = fields[5]
+        (document.getElementById("permanentMonthlyNettDeductions") as HTMLInputElement).value = fields[6]
+        (document.getElementById("participateInPPK") as HTMLInputElement).checked = fields[7].toBooleanStrict()
+        (document.getElementById("liveOutsideOfCity") as HTMLInputElement).checked = fields[8].toBooleanStrict()
+        (document.getElementById("withTargetBonus") as HTMLInputElement).checked = fields[9].toBooleanStrict()
+        (document.getElementById("annualTargetBonusRatio") as HTMLInputElement).value = fields[10]
+        (document.getElementById("quarterTargetBonusRatio") as HTMLInputElement).value = fields[11]
+        (document.getElementById("useNewRulesAfter2022") as HTMLInputElement).checked = fields[12].toBooleanStrict()
+        (document.getElementById("usdRate") as HTMLInputElement).value = fields[13]
+        setFromMap("salaryChange", fields[14])
+        setFromMap("actualAnnualBonus", fields[15])
+        setFromMap("actualQuarterBonus", fields[16])
+        setFromMap("occasionalBonusesGross", fields[17])
+        setFromMap("occasionalNettDeductions", fields[18])
+        setFromMap("actualFoodVouchers", fields[19])
+        setFromMap("sickLeaves", fields[20])
+        (document.getElementById("creativeWorkStart") as HTMLInputElement).value = fields.getOrNull(21) ?: "2022-01"
+        (document.getElementById("creativeWorkPercent") as HTMLInputElement).value = fields.getOrNull(22) ?: "0"
+        submitTheCalculation()
+    } catch (e: Exception) {
+        val element = document.getElementById("output")
+        element?.innerHTML = "Backup failure: ${e.message}"
     }
 }
 
@@ -190,6 +215,10 @@ private fun submitTheCalculation() {
         LocalDate.parse(items[0]) to LocalDate.parse(items[1])
     }.orEmpty()
     backup.add(sickLeavesBackup.joinToString(","))
+    val creativeWorkStart = Month((document.getElementById("creativeWorkStart") as HTMLInputElement).value)
+    backup.add((document.getElementById("creativeWorkStart") as HTMLInputElement).value)
+    val creativeWorkPercent = (document.getElementById("creativeWorkPercent") as HTMLInputElement).value.bdc
+    backup.add((document.getElementById("creativeWorkPercent") as HTMLInputElement).value)
     (document.getElementById("backup") as HTMLInputElement).value = window.btoa(backup.joinToString("|"))
     val input = Input(
         salaryMonthlyGross = salaryMonthlyGross,
@@ -212,7 +241,9 @@ private fun submitTheCalculation() {
         actualFoodVouchersByMonth = actualFoodVouchersByMonth,
         sickLeaves = sickLeaves,
         quarterTargetBonusRatio = quarterTargetBonusRatio,
-        annualTargetBonusRatio = annualTargetBonusRatio
+        annualTargetBonusRatio = annualTargetBonusRatio,
+        creativeWorkStart = creativeWorkStart,
+        creativeWorkPercent = creativeWorkPercent,
     )
     updateTheCalculation(input)
 }

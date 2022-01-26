@@ -21,10 +21,10 @@ data class Month(
         .map { it.atYear(year) }
     val workDays = generateSequence(cal.atDay(1)) { it.plusDays(1) }
         .takeWhile { it.compareTo(cal.atEndOfMonth()).toInt() <= 0 }
-        .filterNot { it in actualHolidays }
+        .filterNot { DayOfWeek.SATURDAY == it.dayOfWeek() || it.dayOfWeek() == DayOfWeek.SUNDAY }
+        .filterNot { it in holidays }
         .filterNot { it.dayOfWeek() == DayOfWeek.FRIDAY && it.plusDays(1) in holidays }
         .filterNot { it.dayOfWeek() == DayOfWeek.FRIDAY && it.dayOfMonth().toInt() <= 7 && cal.atDay(1).dayOfWeek() == DayOfWeek.SATURDAY && cal.atDay(1) in holidays }
-        .filterNot { DayOfWeek.SATURDAY == it.dayOfWeek() || it.dayOfWeek() == DayOfWeek.SUNDAY }
         .toList()
 
     val workDaysCount = workDays.size
@@ -34,24 +34,28 @@ data class Month(
 
     companion object {
         val publicHolidays = setOf(
+            // New Year's Day
             MonthDay.of(1, 1),
+            // Epiphany
             MonthDay.of(1, 6),
-            MonthDay.of(4, 4),
-            MonthDay.of(4, 5),
+            // Easter Monday
+            MonthDay.of(4, 18),
+            // Labour Day
             MonthDay.of(5, 1),
+            // Constitution Day
             MonthDay.of(5, 3),
-            MonthDay.of(5, 23),
-            MonthDay.of(6, 3),
+            // Corpus Christi
+            MonthDay.of(6, 16),
+            // Assumption Day
             MonthDay.of(8, 15),
+            // All Saints' Day
             MonthDay.of(11, 1),
+            // Independence Day
             MonthDay.of(11, 11),
+            // Christmas Day
             MonthDay.of(12, 25),
+            // 2nd Day of Christmas
             MonthDay.of(12, 26),
-        )
-        // actual holidays which should be taken into account as a priority
-        val actualHolidays: Set<LocalDate> = setOf(
-            LocalDate.of(2021, 11, 1),
-            LocalDate.of(2022, 11, 1)
         )
     }
 
