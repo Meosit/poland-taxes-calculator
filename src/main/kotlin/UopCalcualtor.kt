@@ -241,8 +241,9 @@ class UopCalcualtor(input: Input) {
             val baseIncome = gross - socialSecurityTax
             month.log("Base Income for PIT calculation is: ${gross.str()} - ${socialSecurityTax.str()} = ${baseIncome.str()}")
 
-            val creativeWorkTaxFree = creativeWorkTaxFree(month, baseIncome, actualNormalIncomeTaxCap, yearlyState)
-            val pitBase = positive(baseIncome - creativeWorkTaxFree - fixedLocalityTaxBaseFreeQuota).sc()
+            val creativeWorkTaxFree = creativeWorkTaxFree(month, baseIncome, actualNormalIncomeTaxCap, yearlyState, sickSalary)
+            val creativeBaseIncome = baseIncome - creativeWorkTaxFree
+            val pitBase = positive(creativeBaseIncome - fixedLocalityTaxBaseFreeQuota).sc()
             yearlyState.creativeWorkTaxFree += creativeWorkTaxFree
             yearlyState.pitBase += pitBase
             month.log("For PIT, there is a fixed locality tax free amount of ${fixedLocalityTaxBaseFreeQuota.str()} (since you're living ${if (liveOutsideOfCity) "NOT " else ""}in the city where you're working).")
@@ -326,7 +327,7 @@ class UopCalcualtor(input: Input) {
                 else -> healthTaxByRate
             }
 
-            val incomeTaxHealthReduce = if (useNewRules) zero else (baseIncome * healthIncomeTaxReduceRate).sc()
+            val incomeTaxHealthReduce = if (useNewRules) zero else (creativeBaseIncome * healthIncomeTaxReduceRate).sc()
             val reducedIncomeTax = positive(pit - incomeTaxHealthReduce).sc(0)
             if (pit != zero && incomeTaxHealthReduce != zero) {
                 month.log("Calculating Health Tax part which can be taken from PIT: ${healthIncomeTaxReduceRate.percentString()} of ${baseIncome.str()} = ${incomeTaxHealthReduce.str()}")
@@ -350,8 +351,11 @@ class UopCalcualtor(input: Input) {
         month: Month,
         baseIncome: BigDecimal,
         actualNormalIncomeTaxCap: BigDecimal,
-        yearlyState: YearlyState
+        yearlyState: YearlyState,
+        sickSalary: BigDecimal
     ) = if (month >= creativeWorkStart) {
+        val creativeWorkEligible = baseIncome - sickSalary
+        month.logNonZero(sickSalary, "You had a sick leave this month, so some part of your income cannot be reduced by creative work quota, available only: ${baseIncome.str()} - ${sickSalary.str()} = ${creativeWorkEligible.str()}")
         val creativeWorkTaxFree = min(
             baseIncome * creativeWorkPercent div 100.bdc,
             positive(actualNormalIncomeTaxCap - yearlyState.creativeWorkTaxFree)
