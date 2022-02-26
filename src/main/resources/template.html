@@ -43,7 +43,7 @@
                 </p>
                 <p>What it takes into account:</p>
                 <ul>
-                    <li>Start of the employment</li>
+                    <li>Start and end of the employment</li>
                     <li>Food vouchers calculation with tax compensations (customizable)</li>
                     <li>Yearly and Quarterly Bonuses (customizable)</li>
                     <li>Salary Updates</li>
@@ -80,6 +80,12 @@
                                     <label class="label" for="startDate">Contract Start:</label>
                                     <div class="control is-small">
                                         <input class="input is-small" required type="date" id="startDate" name="startDate" value="2021-09-12">
+                                    </div>
+                                </div>
+                                <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="End of the contract. The whole calculation will end at this date or up to three years further if the end date is far than this date">
+                                    <label class="label" for="endDate">Contract End:</label>
+                                    <div class="control is-small">
+                                        <input class="input is-small" required type="date" id="endDate" name="endDate" value="2030-01-01">
                                     </div>
                                 </div>
                                 <div class="is-small field has-tooltip-multiline has-tooltip-bottom" data-tooltip="The initial value of your monthly salary as stated in the contract">

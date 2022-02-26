@@ -155,8 +155,10 @@ private fun loadAndRunBackup() {
         setFromMap("occasionalNettDeductions", fields[18])
         setFromMap("actualFoodVouchers", fields[19])
         setFromMap("sickLeaves", fields[20])
+        // added after first release, need defaults for backup backward compatibility
         (document.getElementById("creativeWorkStart") as HTMLInputElement).value = fields.getOrNull(21) ?: "2022-01"
         (document.getElementById("creativeWorkPercent") as HTMLInputElement).value = fields.getOrNull(22) ?: "0"
+        (document.getElementById("endDate") as HTMLInputElement).value = fields.getOrNull(23) ?: "2030-01-01"
         submitTheCalculation()
     } catch (e: Exception) {
         val element = document.getElementById("output")
@@ -219,6 +221,8 @@ private fun submitTheCalculation() {
     backup.add((document.getElementById("creativeWorkStart") as HTMLInputElement).value)
     val creativeWorkPercent = (document.getElementById("creativeWorkPercent") as HTMLInputElement).value.bdc
     backup.add((document.getElementById("creativeWorkPercent") as HTMLInputElement).value)
+    val endDate = LocalDate.parse((document.getElementById("endDate") as HTMLInputElement).value)
+    backup.add((document.getElementById("endDate") as HTMLInputElement).value)
     (document.getElementById("backup") as HTMLInputElement).value = window.btoa(backup.joinToString("|"))
     val input = Input(
         salaryMonthlyGross = salaryMonthlyGross,
@@ -244,6 +248,7 @@ private fun submitTheCalculation() {
         annualTargetBonusRatio = annualTargetBonusRatio,
         creativeWorkStart = creativeWorkStart,
         creativeWorkPercent = creativeWorkPercent,
+        endDate = endDate
     )
     updateTheCalculation(input)
 }

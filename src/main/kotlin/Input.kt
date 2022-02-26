@@ -9,6 +9,9 @@ data class Input(
     // date when your contract has started
     val startDate: LocalDate = LocalDate.of(2021, 1, 12),
 
+    // date when your contract has ended
+    val endDate: LocalDate = LocalDate.of(2030, 1, 1),
+
     // If the yearly tax declaration is shared with wife/husband - this will disable the second tax threshold.
     // This is related only to month-by-month taxes, not the yearly tax declaration itself
     val sharedTaxDeclaration: Boolean = false,

@@ -29,6 +29,7 @@ data class Month(
 
     val workDaysCount = workDays.size
     fun workDaysAfter(date: LocalDate): Int = workDays.count { it.compareTo(date).toInt() >= 0 }
+    fun workDaysBefore(date: LocalDate): Int = workDays.count { it.compareTo(date).toInt() <= 0 }
 
     fun inDayRange(day: LocalDate) = cal.atDay(1).compareTo(day).toInt() <= 0 && day.compareTo(cal.atEndOfMonth()).toInt() <= 0
 

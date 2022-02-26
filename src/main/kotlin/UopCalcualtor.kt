@@ -8,6 +8,8 @@ class UopCalcualtor(input: Input) {
 
     // date when your contract has started
     private val startDate: LocalDate = input.startDate
+    // date when your contract has ended
+    private val endDate: LocalDate = input.endDate
 
     // If the yearly tax declaration is shared with wife/husband - this will disable the second tax threshold.
     // This is related only to month-by-month taxes, not the yearly tax declaration itself
@@ -134,7 +136,7 @@ class UopCalcualtor(input: Input) {
                 months.map { Month(startDate.year().toInt(), it) }.filterNot { it.cal.atEndOfMonth().compareTo(startDate).toInt() < 0 },
                 months.map { Month(startDate.year().toInt() + 1, it) },
                 months.map { Month(startDate.year().toInt() + 2, it) }
-            )}.flatten()
+            )}.flatten().filter { it.cal.atDay(1).compareTo(endDate).toInt() <= 0 }
 
         var yearlyState = YearlyState(months[0].year)
         val sicknessCompensationState = SicknessCompensationState()
@@ -156,13 +158,17 @@ class UopCalcualtor(input: Input) {
                 actualNormalIncomeTaxCap = normalIncomeTaxCap
                 actualNormalTaxFreeQuota = normalTaxFreeQuota
             }
-            val workingDays: BigDecimal = if (i == 0) month.workDaysAfter(startDate).bdc else month.workDaysCount.bdc
+            val workingDays: BigDecimal = when (i) {
+                0 -> month.workDaysAfter(startDate).bdc
+                months.size - 1 -> month.workDaysBefore(endDate).bdc
+                else -> month.workDaysCount.bdc
+            }
             month.log("In this month there are ${workingDays.str()} working days")
 
             val changedContractGross = contractGrossSalaryChange.filterKeys { it <= month }.maxByOrNull { it.key }?.value ?: salaryMonthlyGross
             yearlyState.workingDays += workingDays
 
-            var gross = grossWithFirstMonthRespect(i, month, changedContractGross, workingDays)
+            var gross = grossWithFirstMonthRespect(i, months.size, month, changedContractGross, workingDays)
             var bonuses = zero
             yearlyState.contractGrossIncome += gross
 
@@ -394,19 +400,31 @@ class UopCalcualtor(input: Input) {
 
     private fun grossWithFirstMonthRespect(
         i: Int,
+        totalMonths: Int,
         month: Month,
         changedContractGross: BigDecimal,
         actualWorkingDays: BigDecimal
-    ) = if (i == 0) {
-        month.log("Hey, this is the first working month in this year! (at least I do not take into account your previous income)")
-        val reducedMonthlyGross = (changedContractGross * (actualWorkingDays.sc(6) div month.workDaysCount.bdc.sc(6))).sc()
-        if (reducedMonthlyGross <= changedContractGross) {
-            month.log("You have partial working month due to start of employment, gross salary is ${reducedMonthlyGross.str()} ($actualWorkingDays out of ${month.workDaysCount} working days)")
+    ) = when (i) {
+        0 -> {
+            month.log("Hey, this is the first working month in this year! (at least I do not take into account your previous income)")
+            val reducedMonthlyGross = (changedContractGross * (actualWorkingDays.sc(6) div month.workDaysCount.bdc.sc(6))).sc()
+            if (reducedMonthlyGross <= changedContractGross) {
+                month.log("You have partial working month due to start of employment, gross salary is ${reducedMonthlyGross.str()} ($actualWorkingDays out of ${month.workDaysCount} working days)")
+            }
+            reducedMonthlyGross
         }
-        reducedMonthlyGross
-    } else {
-        month.log("In this month your standard gross salary is ${changedContractGross.str()}")
-        changedContractGross
+        totalMonths - 1 -> {
+            month.log("Hey, this is the last working month of this calculation! (at least I do not take into account your further income)")
+            val reducedMonthlyGross = (changedContractGross * (actualWorkingDays.sc(6) div month.workDaysCount.bdc.sc(6))).sc()
+            if (reducedMonthlyGross <= changedContractGross) {
+                month.log("You have partial working month due to end of employment, gross salary is ${reducedMonthlyGross.str()} ($actualWorkingDays out of ${month.workDaysCount} working days)")
+            }
+            reducedMonthlyGross
+        }
+        else -> {
+            month.log("In this month your standard gross salary is ${changedContractGross.str()}")
+            changedContractGross
+        }
     }
 
     private fun targetBonus(month: Month, gross: BigDecimal) =
