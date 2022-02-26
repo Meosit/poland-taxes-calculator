@@ -79,7 +79,7 @@
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Start of the contract. The whole calculation will start from this date and rounded with up to three years further">
                                     <label class="label" for="startDate">Contract Start:</label>
                                     <div class="control is-small">
-                                        <input class="input is-small" required type="date" id="startDate" name="startDate" value="2021-09-12">
+                                        <input class="input is-small" required type="date" id="startDate" name="startDate" value="2021-01-01">
                                     </div>
                                 </div>
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="End of the contract. The whole calculation will end at this date or up to three years further if the end date is far than this date">
@@ -135,7 +135,7 @@
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Only to convert nett/gross income to USD, nothing else">
                                     <label class="label" for="usdRate">USD/PLN Rate:</label>
                                     <div class="control is-small has-icons-right">
-                                        <input class="input is-small" required type="number" min="0" step="any" value="4.0507" id="usdRate" name="usdRate">
+                                        <input class="input is-small" required type="number" min="0" step="any" value="4.001" id="usdRate" name="usdRate">
                                         <span class="icon is-small is-right"><i class="fa fa-solid fa-money-bill-wave"></i></span>
                                     </div>
                                 </div>
@@ -185,8 +185,8 @@
                                         Live outside of city
                                     </label>
                                 </div>
-                                <div class="has-tooltip-multiline has-tooltip-bottom"  data-tooltip="A list of official sick leaves, which are paid as 80% of your gross contract daily salary for last year">
-                                    <label class="label">Sick leaves:</label>
+                                <div class="has-tooltip-multiline has-tooltip-bottom"  data-tooltip="A list of official sickness periods, which are paid as 80% of your gross contract daily salary for last year">
+                                    <label class="label">Sickness periods:</label>
                                     <div class="columns is-gapless is-multiline has-tooltip-multiline has-tooltip-bottom">
                                         <div class="column is-half field">
                                             <div class="control is-small">
@@ -225,14 +225,14 @@
                             <div class="content">
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="If true, it means that all taxes for food vouchers will be added to your gross salary, this is some kind of hack to make this tax invisible and make your actual nett income the same">
                                     <label class="label" for="foodVouchersFullyCompensated">
-                                        <input type="checkbox" class="checkbox" checked id="foodVouchersFullyCompensated" name="foodVouchersFullyCompensated">
+                                        <input type="checkbox" class="checkbox" id="foodVouchersFullyCompensated" name="foodVouchersFullyCompensated">
                                         Food vouchers fully compensated
                                     </label>
                                 </div>
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Amount of money which is received in food vouchers at each working day. To have precise values please use the actual income from your payslip.">
                                     <label class="label" for="dailyFoodVouchersIncome">Default income in food vouchers:</label>
                                     <div class="control is-small has-icons-right">
-                                        <input class="input is-small" required type="number" min="0" value="43" step="any" id="dailyFoodVouchersIncome" name="dailyFoodVouchersIncome">
+                                        <input class="input is-small" required type="number" min="0" value="0" step="any" id="dailyFoodVouchersIncome" name="dailyFoodVouchersIncome">
                                         <span class="icon is-small is-right"><i class="fa fa-solid fa-money-bill-wave"></i></span>
                                     </div>
                                 </div>
@@ -275,7 +275,7 @@
                             <div class="content">
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Global switch, if set, it will calculate a target annual and quarter bonuses for February, April, July, October">
                                     <label class="label" for="withTargetBonus">
-                                        <input type="checkbox" class="checkbox" checked id="withTargetBonus" name="withTargetBonus">
+                                        <input type="checkbox" class="checkbox" id="withTargetBonus" name="withTargetBonus">
                                         Calculate annual and quarter bonuses
                                     </label>
                                 </div>
@@ -363,7 +363,7 @@
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Nett money which always deducted from salary, in column &#39;Potrącenie&#39; (e.g. medical insurance)">
                                     <label class="label" for="permanentMonthlyNettDeductions">Permanent Nett Deductions:</label>
                                     <div class="control is-small has-icons-right">
-                                        <input class="input is-small" required type="number" min="0" value="124" step="any" id="permanentMonthlyNettDeductions" name="permanentMonthlyNettDeductions">
+                                        <input class="input is-small" required type="number" min="0" value="0" step="any" id="permanentMonthlyNettDeductions" name="permanentMonthlyNettDeductions">
                                         <span class="icon is-small is-right"><i class="far fa-thumbs-down"></i></span>
                                     </div>
                                 </div>

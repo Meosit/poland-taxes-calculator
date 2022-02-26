@@ -72,9 +72,9 @@ fun main() {
         event.preventDefault()
         try {
             submitTheCalculation()
-        } catch (e: Exception) {
+        } catch (e: dynamic) {
             val element = document.getElementById("output")
-            element?.innerHTML = "<div class=\"notification is-danger\">Input failure: ${e.message}</div>"
+            element?.innerHTML = "<div class=\"notification is-danger\">Input failure: $e</div>"
         }
     })
 
@@ -137,8 +137,7 @@ private fun loadAndRunBackup() {
         (document.getElementById("startDate") as HTMLInputElement).value = fields[1]
         (document.getElementById("adultDate") as HTMLInputElement).value = fields[2]
         (document.getElementById("sharedTaxDeclaration") as HTMLInputElement).checked = fields[3].toBooleanStrict()
-        (document.getElementById("foodVouchersFullyCompensated") as HTMLInputElement).checked =
-            fields[4].toBooleanStrict()
+        (document.getElementById("foodVouchersFullyCompensated") as HTMLInputElement).checked = fields[4].toBooleanStrict()
         (document.getElementById("dailyFoodVouchersIncome") as HTMLInputElement).value = fields[5]
         (document.getElementById("permanentMonthlyNettDeductions") as HTMLInputElement).value = fields[6]
         (document.getElementById("participateInPPK") as HTMLInputElement).checked = fields[7].toBooleanStrict()
@@ -160,9 +159,9 @@ private fun loadAndRunBackup() {
         (document.getElementById("creativeWorkPercent") as HTMLInputElement).value = fields.getOrNull(22) ?: "0"
         (document.getElementById("endDate") as HTMLInputElement).value = fields.getOrNull(23) ?: "2030-01-01"
         submitTheCalculation()
-    } catch (e: Exception) {
+    } catch (e: dynamic) {
         val element = document.getElementById("output")
-        element?.innerHTML = "Backup failure: ${e.message}"
+        element?.innerHTML = "Backup failure: $e"
     }
 }
 
