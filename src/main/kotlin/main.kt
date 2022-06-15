@@ -158,6 +158,7 @@ private fun loadAndRunBackup() {
         (document.getElementById("creativeWorkStart") as HTMLInputElement).value = fields.getOrNull(21) ?: "2022-01"
         (document.getElementById("creativeWorkPercent") as HTMLInputElement).value = fields.getOrNull(22) ?: "0"
         (document.getElementById("endDate") as HTMLInputElement).value = fields.getOrNull(23) ?: "2030-01-01"
+        (document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked = fields.getOrNull(24)?.toBooleanStrict() ?: true
         submitTheCalculation()
     } catch (e: dynamic) {
         val element = document.getElementById("output")
@@ -216,12 +217,17 @@ private fun submitTheCalculation() {
         LocalDate.parse(items[0]) to LocalDate.parse(items[1])
     }.orEmpty()
     backup.add(sickLeavesBackup.joinToString(","))
+
+    // added after first release
     val creativeWorkStart = Month((document.getElementById("creativeWorkStart") as HTMLInputElement).value)
     backup.add((document.getElementById("creativeWorkStart") as HTMLInputElement).value)
     val creativeWorkPercent = (document.getElementById("creativeWorkPercent") as HTMLInputElement).value.bdc
     backup.add((document.getElementById("creativeWorkPercent") as HTMLInputElement).value)
     val endDate = LocalDate.parse((document.getElementById("endDate") as HTMLInputElement).value)
     backup.add((document.getElementById("endDate") as HTMLInputElement).value)
+    val useNewRulesAfterJuly2022 = (document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked
+    backup.add((document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked.toString())
+    // creating backup
     (document.getElementById("backup") as HTMLInputElement).value = window.btoa(backup.joinToString("|"))
     val input = Input(
         salaryMonthlyGross = salaryMonthlyGross,
@@ -234,6 +240,7 @@ private fun submitTheCalculation() {
         participateInPPK = participateInPPK,
         liveOutsideOfCity = liveOutsideOfCity,
         useNewRulesAfter2022 = useNewRulesAfter2022,
+        useNewRulesAfterJuly2022 = useNewRulesAfterJuly2022,
         withTargetBonus = withTargetBonus,
         usdRate = usdRate,
         contractGrossSalaryChange = contractGrossSalaryChange,

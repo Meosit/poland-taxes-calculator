@@ -67,10 +67,14 @@ data class Input(
     // every new entry applied since specified month and till more late entry
     val contractGrossSalaryChange: Map<Month, BigDecimal> = mapOf(),
 
-    // optionally, enable new tax calculation changes (which are still unconfirmed) in 2022 and later
+    // optionally, enable new tax calculation changes in 2022 and later
     // The two changes is increased normal tax cap (from 85k to 120k), increased a tax-free sum (from 525.12 to 5100)
     // and health tax cannot be reduced by the PIT (7.75% of health tax cannot be deducted from PIT)
     val useNewRulesAfter2022: Boolean = true,
+
+    // optionally, enable new tax calculation changes in July 2022 and later
+    // The main change is a new tax rate of 12% instead of 17% for new
+    val useNewRulesAfterJuly2022: Boolean = true,
 
     // only to convert your nett to USD, nothing else
     val usdRate: BigDecimal = "4.0507".bdc,
