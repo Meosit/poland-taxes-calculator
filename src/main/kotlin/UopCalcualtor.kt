@@ -1,5 +1,6 @@
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.datetime.internal.JSJoda.LocalDate
+import kotlinx.datetime.internal.JSJoda.YearMonth
 
 class UopCalcualtor(input: Input) {
 
@@ -66,10 +67,14 @@ class UopCalcualtor(input: Input) {
     // every new entry applied since specified month and till more late entry
     private val contractGrossSalaryChange: Map<Month, BigDecimal> = input.contractGrossSalaryChange
 
-    // optionally, enable new tax calculation changes (which are still unconfirmed) in 2022 and later
+    // optionally, enable new tax calculation changes in 2022 and later
     // The two changes is increased normal tax cap (from 85k to 120k), increased a tax-free sum (from 525.12 to 5100)
     // and health tax cannot be reduced by the PIT (7.75% of health tax cannot be deducted from PIT)
     private val useNewRulesAfter2022: Boolean = input.useNewRulesAfter2022
+
+    // optionally, enable new tax calculation changes in July 2022 and later
+    // The main change is a new tax rate of 12% instead of 17% for new
+    private val useNewRulesAfterJuly2022: Boolean = input.useNewRulesAfter2022
 
     // list of sick leave ranges which will be paid as 80% of contract salary
     private val sickLeaves: List<Pair<LocalDate, LocalDate>> = input.sickLeaves
@@ -102,6 +107,7 @@ class UopCalcualtor(input: Input) {
     private val normalTaxFreeQuotaSince2022 = "5100".bdc
 
     private val normalIncomeTaxRate = "0.17".bdc
+    private val normalIncomeTaxRateSinceJuly2022 = "0.12".bdc
     private val increasedIncomeTaxRate = "0.32".bdc
     private val healthIncomeTaxReduceRate = "0.0775".bdc
     private val foodVoucherTaxFreeQuota = "190".bdc
@@ -147,14 +153,21 @@ class UopCalcualtor(input: Input) {
                 yearlyState = YearlyState(month.year)
                 years += month.year to yearlyState
             }
-            val useNewRules = month.cal.year().toInt() >= 2022 && useNewRulesAfter2022
+            val polskiLad = month.cal.year().toInt() >= 2022 && useNewRulesAfter2022
+            val polskiLad2 = month.cal.compareTo(YearMonth.Companion.of(2022, 7)).toInt() >= 0 && useNewRulesAfterJuly2022
             val actualNormalIncomeTaxCap: BigDecimal
             val actualNormalTaxFreeQuota: BigDecimal
-            if (useNewRules) {
-                month.log("Using a new 2022 rules for tax calculation, PIT of ${normalIncomeTaxRate.percentString()} is till ${normalIncomeTaxCapSince2022.str()} ")
+            val actualNormalIncomeTaxRate: BigDecimal
+            if (polskiLad) {
+                actualNormalIncomeTaxRate = if (polskiLad2) {
+                    month.log("Using a new 2022 July (Polski Ład 2.0) rules for tax calculation, tax rate for normal cap would be ${normalIncomeTaxRateSinceJuly2022.percentString()} instead of ${normalIncomeTaxRate.percentString()}")
+                    normalIncomeTaxRateSinceJuly2022
+                } else normalIncomeTaxRate
+                month.log("Using a new 2022 (Polski Ład) rules for tax calculation, PIT of ${actualNormalIncomeTaxRate.percentString()} is till ${normalIncomeTaxCapSince2022.str()} ")
                 actualNormalIncomeTaxCap = normalIncomeTaxCapSince2022
                 actualNormalTaxFreeQuota = normalTaxFreeQuotaSince2022
             } else {
+                actualNormalIncomeTaxRate = normalIncomeTaxRate
                 actualNormalIncomeTaxCap = normalIncomeTaxCap
                 actualNormalTaxFreeQuota = normalTaxFreeQuota
             }
@@ -284,15 +297,15 @@ class UopCalcualtor(input: Input) {
                 }
                 sharedTaxDeclaration -> {
                     month.log("Since you're sharing a tax declaration with your spouse, so normal PIT thresholds do not apply (due to unknown income of your spouse) - you will need to pay the difference with tax declaration, for now the difference is ${yearlyState.increasedPit.str()} (this diff do not take into account spouse's income)")
-                    pitNormalTax = (actualPitBase * normalIncomeTaxRate).sc()
-                    month.log("The initial PIT is ${normalIncomeTaxRate.percentString()} of ${actualPitBase.str()} = ${pitNormalTax.str()}")
+                    pitNormalTax = (actualPitBase * actualNormalIncomeTaxRate).sc()
+                    month.log("The initial PIT is ${actualNormalIncomeTaxRate.percentString()} of ${actualPitBase.str()} = ${pitNormalTax.str()}")
                     pitIncreasedTax = zero
                     pitNormalTax
                 }
                 actualYearlyPitBase <= actualNormalIncomeTaxCap -> {
                     month.log("Base for PIT in this year (${actualYearlyPitBase.str()}) is less than a normal cap of ${actualNormalIncomeTaxCap.str()}")
-                    pitNormalTax = (actualPitBase * normalIncomeTaxRate).sc()
-                    month.log("The initial PIT is ${normalIncomeTaxRate.percentString()} of ${actualPitBase.str()} = ${pitNormalTax.str()}")
+                    pitNormalTax = (actualPitBase * actualNormalIncomeTaxRate).sc()
+                    month.log("The initial PIT is ${actualNormalIncomeTaxRate.percentString()} of ${actualPitBase.str()} = ${pitNormalTax.str()}")
                     pitIncreasedTax = zero
                     pitNormalTax
                 }
@@ -300,10 +313,10 @@ class UopCalcualtor(input: Input) {
                     val normalCapOverflow = actualYearlyPitBase - actualNormalIncomeTaxCap
                     val normalCapThreshold = actualPitBase - normalCapOverflow
                     month.log("In this month the yearly base for PIT (${actualYearlyPitBase.str()}) reaches the existing cap of ${actualNormalIncomeTaxCap.str()}")
-                    month.log("Only amount of ${normalCapThreshold.str()} can be taxed by ${normalIncomeTaxRate.percentString()}, the rest ${normalCapOverflow.str()} will be taxed by increased rate of ${increasedIncomeTaxRate.percentString()}")
-                    pitNormalTax = (normalCapThreshold * normalIncomeTaxRate).sc()
+                    month.log("Only amount of ${normalCapThreshold.str()} can be taxed by ${actualNormalIncomeTaxRate.percentString()}, the rest ${normalCapOverflow.str()} will be taxed by increased rate of ${increasedIncomeTaxRate.percentString()}")
+                    pitNormalTax = (normalCapThreshold * actualNormalIncomeTaxRate).sc()
                     pitIncreasedTax = (normalCapOverflow * increasedIncomeTaxRate).sc()
-                    month.log("The initial PIT is: ${normalIncomeTaxRate.percentString()} of $normalCapThreshold + ${increasedIncomeTaxRate.percentString()} of ${normalCapOverflow.str()} = ${pitNormalTax.str()} + ${pitIncreasedTax.str()} = ${(pitNormalTax + pitIncreasedTax).str()}")
+                    month.log("The initial PIT is: ${actualNormalIncomeTaxRate.percentString()} of $normalCapThreshold + ${increasedIncomeTaxRate.percentString()} of ${normalCapOverflow.str()} = ${pitNormalTax.str()} + ${pitIncreasedTax.str()} = ${(pitNormalTax + pitIncreasedTax).str()}")
                     pitNormalTax + pitIncreasedTax
                 }
                 else -> {
@@ -324,7 +337,7 @@ class UopCalcualtor(input: Input) {
             }
 
             // this is to avoid 0 for people under 26, can be calculated just by 17% because on increased tax in this case is unreachable
-            val virtualIncomeTax = (pitBase * normalIncomeTaxRate - pitTaxFree).sc(0)
+            val virtualIncomeTax = (pitBase * actualNormalIncomeTaxRate - pitTaxFree).sc(0)
             val healthTax = when {
                 virtualIncomeTax <= healthTaxByRate -> {
                     month.log("The amount of PIT (virtual for people under 26) ${virtualIncomeTax.str()} is less than Health Insurance Tax of ${healthTaxByRate.str()}, so setting the Health Insurance Tax to ${pit.str()} (just following the rules)")
@@ -333,7 +346,7 @@ class UopCalcualtor(input: Input) {
                 else -> healthTaxByRate
             }
 
-            val incomeTaxHealthReduce = if (useNewRules) zero else (creativeBaseIncome * healthIncomeTaxReduceRate).sc()
+            val incomeTaxHealthReduce = if (polskiLad) zero else (creativeBaseIncome * healthIncomeTaxReduceRate).sc()
             val reducedIncomeTax = positive(pit - incomeTaxHealthReduce).sc(0)
             if (pit != zero && incomeTaxHealthReduce != zero) {
                 month.log("Calculating Health Tax part which can be taken from PIT: ${healthIncomeTaxReduceRate.percentString()} of ${baseIncome.str()} = ${incomeTaxHealthReduce.str()}")
