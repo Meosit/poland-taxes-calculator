@@ -7,7 +7,7 @@ data class Input(
     val salaryMonthlyGross: BigDecimal = "10000".bdc,
 
     // date when your contract has started
-    val startDate: LocalDate = LocalDate.of(2021, 1, 12),
+    val startDate: LocalDate = LocalDate.of(2023, 1, 12),
 
     // date when your contract has ended
     val endDate: LocalDate = LocalDate.of(2030, 1, 1),

@@ -93,6 +93,7 @@ class UopCalcualtor(input: Input) {
         2020 to "156810".bdc,
         2021 to "157770".bdc,
         2022 to "177660".bdc,
+        2023 to "208050".bdc,
     )
     private val normalIncomeTaxCap = "85528".bdc
     private val normalIncomeTaxCapSince2022 = "120000".bdc

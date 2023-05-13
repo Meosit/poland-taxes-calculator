@@ -407,8 +407,8 @@ private fun updateTheCalculation(input: Input) {
         """<th id="header-sect-calendar" colspan="${cColSpan("sect-calendar")}" class="               sect-calendar ${isHidden("sect-calendar")} has-text-white" style="border-bottom:0;">Calendar</th>""",
         """<th id="header-sect-income" colspan="${cColSpan("sect-income")}" class="section-border sect-income ${isHidden("sect-income")} has-text-white" style="border-bottom:0;">Income</th>""",
         """<th id="header-sect-food" colspan="${cColSpan("sect-food")}" class="section-border sect-food ${isHidden("sect-food")} has-text-white" style="border-bottom:0;">Food Vouchers</th>""",
-        """<th id="header-sect-zus" colspan="${cColSpan("sect-zus")}" class="section-border sect-zus ${isHidden("sect-zus")} has-text-white" style="border-bottom:0;">ZUS (Social Insurance</th>""",
-        """<th id="header-sect-pit" colspan="${cColSpan("sect-pit")}" class="section-border sect-pit ${isHidden("sect-pit")} has-text-white" style="border-bottom:0;">PIT (Income Tax</th>""",
+        """<th id="header-sect-zus" colspan="${cColSpan("sect-zus")}" class="section-border sect-zus ${isHidden("sect-zus")} has-text-white" style="border-bottom:0;">ZUS (Social Insurance)</th>""",
+        """<th id="header-sect-pit" colspan="${cColSpan("sect-pit")}" class="section-border sect-pit ${isHidden("sect-pit")} has-text-white" style="border-bottom:0;">PIT (Income Tax)</th>""",
         """<th id="header-sect-deductions" colspan="${cColSpan("sect-deductions")}" class="section-border sect-deductions ${isHidden("sect-deductions")} has-text-white" style="border-bottom:0;">Deductions</th>""",
         """<th id="header-sect-nett" colspan="${cColSpan("sect-nett")}" class="section-border sect-nett ${isHidden("sect-nett")} has-text-white" style="border-bottom:0;">Money on hand</th>""",
     ).joinToString("\n", prefix = "<tr>", postfix = "</tr>")
@@ -432,9 +432,9 @@ private fun updateTheCalculation(input: Input) {
         , "Sickness" to "Sickness Tax (Chorobowe), always 2.45% for worker with no limit"
         , "Health" to "Health Tax (Zdrowotne), 9%, calculates differently based on month and inputs, please refer the logs for more info"
         , "ZUS Total" to "Total amount payed to ZUS"
-        , "Yearly Base" to "Yearly Base for PIT tax, based on this either 17% or 32% tax is applied."
+        , "Yearly Base" to "Yearly Base for PIT tax, based on this either 12% (17% before Polski Ład 2.0) or 32% tax is applied."
         , "Month Base" to "Monthly Base for PIT tax, this is a 'Total Gross' minus ZUS and some other minor reduces"
-        , "17% Tax" to "Amount of money paid with 17% tax in this month"
+        , "12% Tax*" to "Amount of money paid with 12% (17% before Polski Ład 2.0) tax in this month"
         , "32% Tax" to "Amount of money paid with 32% tax in this month"
         , "Tax Free" to "A tax free amount which will be deducted from PIT, this value is based on minimal TAX-free salary"
         , "Health Reduce" to "Until 2022, a person had a right to deduct from PIT a 7.75% of 9% paid to Health Insurance "
