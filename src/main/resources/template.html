@@ -86,7 +86,14 @@
                                 <div class="field has-tooltip-multiline has-tooltip-bottom" data-tooltip="End of the contract. The whole calculation will end at this date or up to three years further if the end date is far than this date">
                                     <label class="label" for="endDate">Contract End:</label>
                                     <div class="control is-small">
-                                        <input class="input is-small" required type="date" id="endDate" name="endDate" value="2030-01-01">
+                                        <input class="input is-small" required type="date" id="endDate" name="endDate" value="2030-12-31">
+                                    </div>
+                                </div>
+                                <div class="is-small field has-tooltip-multiline has-tooltip-bottom" data-tooltip="Amount of years to calculate (note also the contract end)">
+                                    <label class="label" for="yearsToCalculate">Years to Calculate:</label>
+                                    <div class="control is-small has-icons-right">
+                                        <input class="input is-small" required type="number" min="1" max="20" step="1" value="3" id="yearsToCalculate" name="yearsToCalculate">
+                                        <span class="icon is-small is-right"><i class="fas fa-calendar-plus"></i></span>
                                     </div>
                                 </div>
                                 <div class="is-small field has-tooltip-multiline has-tooltip-bottom" data-tooltip="The initial value of your monthly salary as stated in the contract">

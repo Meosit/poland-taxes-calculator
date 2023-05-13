@@ -7,6 +7,9 @@ class UopCalcualtor(input: Input) {
     // your actual gross salary as in contract
     private val salaryMonthlyGross: BigDecimal = input.salaryMonthlyGross
 
+    // number of years to calculate, minimum is 1
+    private val yearsToCalculate: Int = kotlin.math.max(input.yearsToCalculate, 1)
+
     // date when your contract has started
     private val startDate: LocalDate = input.startDate
     // date when your contract has ended
@@ -139,11 +142,12 @@ class UopCalcualtor(input: Input) {
     fun calculate(): List<TaxMonthInfo> {
         val fixedLocalityTaxBaseFreeQuota = (if (liveOutsideOfCity) "300" else "250").bdc
         val months = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-            .let { months -> listOf(
-                months.map { Month(startDate.year().toInt(), it) }.filterNot { it.cal.atEndOfMonth().compareTo(startDate).toInt() < 0 },
-                months.map { Month(startDate.year().toInt() + 1, it) },
-                months.map { Month(startDate.year().toInt() + 2, it) }
-            )}.flatten().filter { it.cal.atDay(1).compareTo(endDate).toInt() <= 0 }
+            .let { months -> sequence {
+                yield(months.map { Month(startDate.year().toInt(), it) }.filterNot { it.cal.atEndOfMonth().compareTo(startDate).toInt() < 0 })
+                for (i in 1 until yearsToCalculate) {
+                    yield(months.map { Month(startDate.year().toInt() + i, it) })
+                }
+            }.toList() }.flatten().filter { it.cal.atDay(1).compareTo(endDate).toInt() <= 0 }
 
         var yearlyState = YearlyState(months[0].year)
         val sicknessCompensationState = SicknessCompensationState()

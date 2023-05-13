@@ -6,6 +6,9 @@ data class Input(
     // your actual gross salary as in contract
     val salaryMonthlyGross: BigDecimal = "10000".bdc,
 
+    // your actual gross salary as in contract
+    val yearsToCalculate: Int = 3,
+
     // date when your contract has started
     val startDate: LocalDate = LocalDate.of(2023, 1, 12),
 

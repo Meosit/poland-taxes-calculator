@@ -159,6 +159,7 @@ private fun loadAndRunBackup() {
         (document.getElementById("creativeWorkPercent") as HTMLInputElement).value = fields.getOrNull(22) ?: "0"
         (document.getElementById("endDate") as HTMLInputElement).value = fields.getOrNull(23) ?: "2030-01-01"
         (document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked = fields.getOrNull(24)?.toBooleanStrict() ?: true
+        (document.getElementById("yearsToCalculate") as HTMLInputElement).value = fields.getOrNull(25) ?: "3"
         submitTheCalculation()
     } catch (e: dynamic) {
         val element = document.getElementById("output")
@@ -227,10 +228,13 @@ private fun submitTheCalculation() {
     backup.add((document.getElementById("endDate") as HTMLInputElement).value)
     val useNewRulesAfterJuly2022 = (document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked
     backup.add((document.getElementById("useNewRulesAfterJuly2022") as HTMLInputElement).checked.toString())
+    val yearsToCalculate = (document.getElementById("yearsToCalculate") as HTMLInputElement).value.toInt()
+    backup.add((document.getElementById("yearsToCalculate") as HTMLInputElement).value)
     // creating backup
     (document.getElementById("backup") as HTMLInputElement).value = window.btoa(backup.joinToString("|"))
     val input = Input(
         salaryMonthlyGross = salaryMonthlyGross,
+        yearsToCalculate = yearsToCalculate,
         startDate = startDate,
         birthday26years = adultDate,
         sharedTaxDeclaration = sharedTaxDeclaration,
