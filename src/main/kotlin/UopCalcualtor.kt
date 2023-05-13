@@ -74,7 +74,7 @@ class UopCalcualtor(input: Input) {
 
     // optionally, enable new tax calculation changes in July 2022 and later
     // The main change is a new tax rate of 12% instead of 17% for new
-    private val useNewRulesAfterJuly2022: Boolean = input.useNewRulesAfter2022
+    private val useNewRulesAfterJuly2022: Boolean = input.useNewRulesAfterJuly2022
 
     // list of sick leave ranges which will be paid as 80% of contract salary
     private val sickLeaves: List<Pair<LocalDate, LocalDate>> = input.sickLeaves
