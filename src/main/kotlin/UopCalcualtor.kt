@@ -387,10 +387,10 @@ class UopCalcualtor(input: Input) {
         val creativeWorkTaxFree = min(
             baseIncome * creativeWorkPercent div 100.bdc,
             positive(actualNormalIncomeTaxCap - yearlyState.creativeWorkTaxFree)
-        )
+        ) div 2.bdc
         month.logNonZero(
             creativeWorkPercent,
-            "You have a PIT base reduce due to creative work quota by $creativeWorkPercent%: ${baseIncome.str()} * ${creativeWorkPercent.str()} / 100 = ${creativeWorkTaxFree.str()} (with maximum of ${actualNormalIncomeTaxCap.str()}, currently is ${yearlyState.creativeWorkTaxFree.str()})"
+            "You have a PIT base reduce due to creative work quota by half of $creativeWorkPercent% of your income: (${baseIncome.str()} * ${creativeWorkPercent.str()} / 100) / 2 = ${creativeWorkTaxFree.str()} (with maximum of ${actualNormalIncomeTaxCap.str()}, currently is ${yearlyState.creativeWorkTaxFree.str()})"
         )
         if (creativeWorkPercent != zero && creativeWorkTaxFree == zero)
             month.log("You have reached a maximum ($actualNormalIncomeTaxCap) of a PIT base reduce due to creative work - so no benefits")
