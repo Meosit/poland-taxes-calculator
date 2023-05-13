@@ -488,7 +488,7 @@ private fun updateTheCalculation(input: Input) {
                     (nettIncome div input.usdRate).str(false),
                     months.take(months.count { m -> m.month.year == month.year && m.month <= month })
                         .avgOf { m -> (m.nettIncome div input.usdRate) }.str(false),
-                    (BigDecimal.ONE - (nettIncome div grossIncome)).percentString(),
+                    (BigDecimal.ONE - (if (grossIncome == zero) zero else nettIncome div grossIncome)).percentString(),
                 ).mapIndexed { i, s -> "<td class=\"${cClass(i)}\">$s</td>" }
                     .joinToString("\n", prefix = "<tr>", postfix = "</tr>")
             }
@@ -527,7 +527,7 @@ private fun updateTheCalculation(input: Input) {
                 avgOf { it.nettIncome }.str(false),
                 (sumOf { it.nettIncome } div input.usdRate).str(false),
                 (avgOf { it.nettIncome } div input.usdRate).str(false),
-                (BigDecimal.ONE - (sumOf { it.nettIncome } div sumOf { it.grossIncome })).percentString(),
+                (BigDecimal.ONE - (if (sumOf { it.grossIncome } == zero) zero else sumOf { it.nettIncome } div sumOf { it.grossIncome })).percentString(),
             ).mapIndexed { i, s -> "<td class=\"${cClass(i)}\">$s</td>" }
                 .joinToString("\n", prefix = "<tr class=\"has-text-weight-bold year-border\">", postfix = "</tr>")
         }

@@ -176,9 +176,13 @@ class UopCalcualtor(input: Input) {
                 months.size - 1 -> month.workDaysBefore(endDate).bdc
                 else -> month.workDaysCount.bdc
             }
+            val changedContractGross = contractGrossSalaryChange.filterKeys { it <= month }.maxByOrNull { it.key }?.value ?: salaryMonthlyGross
+            if (workingDays == zero) {
+                month.log("There are no working days found for this month")
+                return@mapIndexed TaxMonthInfo(month, workingDays.intValue(), zero.intValue(), changedContractGross, zero, zero, zero, zero, zero, zero, zero, yearlyState.zusBase, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, month.getLog())
+            }
             month.log("In this month there are ${workingDays.str()} working days")
 
-            val changedContractGross = contractGrossSalaryChange.filterKeys { it <= month }.maxByOrNull { it.key }?.value ?: salaryMonthlyGross
             yearlyState.workingDays += workingDays
 
             var gross = grossWithFirstMonthRespect(i, months.size, month, changedContractGross, workingDays)
